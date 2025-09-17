@@ -19,3 +19,11 @@ export const getUserInfo = () =>{
 export const detailProject = () =>{
     return http('/detail/project')
 }
+
+export const projectInfo = (data) =>{
+    return http('/project/info',data)
+}
+
+export const likeList = () =>{
+    return http('/like/list')
+}

@@ -1,15 +1,15 @@
 let baseUrl = ''
-if (process.env.NODE_ENV === 'development'){
+if (process.env.NODE_ENV === 'development') {
 	//开发环境
 	//baseUrl = 'http://localhost:5173/api'
-	baseUrl = 'http://159.75.169.224:4200/api'
+	baseUrl = 'http://172.23.206.6:8083/api'
 }
-else{
+else {
 	baseUrl = 'http://159.75.169.224:4200/api'
 }
 
 
-export default function http(url, data = {},method = "GET") {
+export default function http(url, data = {}, method = "GET") {
 	return new Promise((resolve, reject) => {
 		uni.request({
 			url: baseUrl + url,

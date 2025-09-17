@@ -33,7 +33,24 @@
 			"style" : 
 			{
 				"navigationBarTitleText" : "",
-				"navigationStyle":"custom"
+				"navigationStyle":"default",
+				"navigationBarBackgroundColor": "#ffffff"
+			}
+		},
+		{
+			"path" : "pages/line/line",
+			"style" : 
+			{
+				"navigationBarTitleText" : ""
+			}
+		},
+		{
+			"path" : "pages/my/profile",
+			"style" : 
+			{
+				"navigationBarTitleText" : "个人信息",
+				"navigationStyle":"default",
+				"navigationBarBackgroundColor": "#ffffff"
 			}
 		}
 	],
@@ -65,7 +82,7 @@
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "uni-app",
-		"navigationBarBackgroundColor": "#F8F8F8",
+		"navigationBarBackgroundColor": "#ffffff",
 		"backgroundColor": "#F8F8F8"
 	}
 }

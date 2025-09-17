@@ -49,7 +49,7 @@
 		<view class="listBox">
 			<view class="lists">
 				<uni-list>
-					<uni-list-item :show-extra-icon="true" :extra-icon="extraIcon1" showArrow title="个人信息"clickable></uni-list-item>
+					<uni-list-item :show-extra-icon="true" :extra-icon="extraIcon1" showArrow title="个人信息" clickable @click="goToProfile"></uni-list-item>
 					<uni-list-item :show-extra-icon="true" :extra-icon="extraIcon2" showArrow title="我的门票"clickable></uni-list-item>
 					<uni-list-item :show-extra-icon="true" :extra-icon="extraIcon3" showArrow title="用户反馈"clickable></uni-list-item>
 					<uni-list-item :show-extra-icon="true" :extra-icon="extraIcon4" showArrow title="我的邮件"clickable></uni-list-item>
@@ -163,7 +163,14 @@ const close = () => {
 }
 
 const onChooseavatar = (e) => {
-	tempUserInfo.avatarUrl = e.detail.avatarUrl
+  tempUserInfo.avatarUrl = e.detail.avatarUrl
+}
+
+// 跳转到个人信息页面
+const goToProfile = () => {
+  uni.navigateTo({
+    url: `/pages/my/profile`
+  })
 }
 
 //icon图标
