@@ -163,6 +163,7 @@ onLoad(() => {
 
   getHomeList().then(res => {
     // 确保获取的是数组数据，正确处理API返回的数据结构
+    
     originalList.value = Array.isArray(res) ? res : (res.data || res.list || [])
   }).catch(err => {
     console.error('getHomeList error:', err)

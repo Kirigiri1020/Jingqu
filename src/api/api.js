@@ -12,18 +12,26 @@ export const login = (data) => {
     return http('/login', data, "POST")
 }
 
-export const getUserInfo = () =>{
+export const getUserInfo = () => {
     return http('/getUserInfo')
 }
 
-export const detailProject = () =>{
+export const detailProject = () => {
     return http('/detail/project')
 }
 
-export const projectInfo = (id) =>{
-	return http('/project/info', { id }, "POST")
+export const projectInfo = (id) => {
+    return http('/project/info', { id }, "POST")
 }
 
-export const likeList = () =>{
+export const likeList = () => {
     return http('/like/list')
+}
+
+export const getliketag = (id) => {
+    return http('/like/gettag', { id }, "POST")
+}
+
+export const changeliketag = (id) => {
+    return http('/like/changetag', { id }, "POST")
 }

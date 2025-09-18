@@ -5,9 +5,17 @@
 			<image :src="details.dt.img" mode="aspectFill" />
 			<view class="d-content">
 				<view class="j-con">
-					<view class="tit" style="display: flex;">
-						<text style="margin-right: 7px; font-size: 17px">{{ details.dt.title }}</text>
-						<up-tag text="SA级景区" size="mini" shape="circle"></up-tag>
+					<view class="tit" style="display: flex; align-items: center;">
+						<text style="margin-right: 7px; font-size: 17px; line-height: 1;">{{ details.dt.title }}</text>
+						<up-tag :text="details.dt.tag[1]" size="mini" shape="circle" style="margin-top: 1px;"></up-tag>
+					</view>
+					<view class="like-icon" @click="handleLikeClick">
+						<up-icon 
+							name="heart" 
+							:color="likeStatus === 1 ? '#ff0000' : '#000000'" 
+							size="22"
+							:fill="likeStatus === 1"
+						></up-icon>
 					</view>
 					<view class="jj">
 						<view style="font-weight: 700;font-size: 14px;">景区介绍</view>
@@ -48,9 +56,10 @@
 <script setup lang="ts">
 import { onLoad } from '@dcloudio/uni-app';
 import { ref, reactive } from 'vue';
-import { detailProject } from '../../api/api.js';
+import { detailProject ,getliketag,changeliketag} from '../../api/api.js';
 
 const projectList = ref([])
+const likeStatus = ref(0) // 0: 不喜欢, 1: 喜欢
 
 const details = reactive({
 	dt: ''
@@ -63,17 +72,59 @@ const goLine = (item) =>{
 }
 
 onLoad((opt) => {
+	details.dt = JSON.parse(decodeURIComponent(opt.item))
+	
+	// 获取当前景区的喜欢状态
+	const scenicId = details.dt.id
+	getliketag(scenicId).then(res => {
+		console.log("获取喜欢状态响应:", res)
+		if (res && res.tag !== undefined) {
+			likeStatus.value = res.tag
+			console.log("设置likeStatus为:", likeStatus.value)
+		} else {
+			console.warn("喜欢状态响应格式不正确:", res)
+			likeStatus.value = 0
+		}
+	}).catch(error => {
+		console.error("获取喜欢状态失败:", error)
+	})
+	
 	detailProject().then(res => {
 		// 过滤项目列表，只显示belong属性与当前景区id相同的项目
-		const currentScenicId = JSON.parse(decodeURIComponent(opt.item)).id
+		const currentScenicId = details.dt.id
 		projectList.value = res.filter(item => item.belong === currentScenicId)
 		console.log("filtered projectList", projectList.value)
 	}).catch((error) => {
 		console.error("获取项目列表失败:", error)
 		projectList.value = []
 	})
-	details.dt = JSON.parse(decodeURIComponent(opt.item))
 })
+
+// 处理爱心图标点击事件
+const handleLikeClick = async () => {
+	try {
+		const scenicId = details.dt.id
+		const res = await changeliketag(scenicId)
+		console.log("切换喜欢状态响应:", res)
+		if (res && res.tag !== undefined) {
+			likeStatus.value = res.tag
+			uni.showToast({
+				title: likeStatus.value === 1 ? '已添加到喜欢' : '已取消喜欢',
+				icon: 'success'
+			})
+		} else {
+			console.warn("切换喜欢状态响应格式不正确:", res)
+		}
+	} catch (error) {
+		console.error("切换喜欢状态失败:", error)
+		uni.showToast({
+			title: '操作失败',
+			icon: 'error'
+		})
+	}
+}
+
+
 </script>
 
 <style lang="scss" scoped>
@@ -101,6 +152,21 @@ onLoad((opt) => {
 		.j-con {
 			margin-top: 30rpx;
 			margin-bottom: 30rpx;
+			
+			.like-icon {
+				margin: 15rpx 0;
+				padding: 10rpx;
+				display: inline-block;
+				border-radius: 50%;
+				background-color: #f5f5f5;
+				cursor: pointer;
+				transition: all 0.3s ease;
+				
+				&:active {
+					transform: scale(0.95);
+					background-color: #e0e0e0;
+				}
+			}
 
 			.tit {
 				font-size: 36rpx;

@@ -295,7 +295,51 @@ CREATE TABLE `user_like` (
 }
 ```
 
-### 10. 搜索景区接口
+### 10. 获取景区喜欢标签状态
+**接口路径**: `/api/like/gettag`  
+**请求方式**: POST  
+**请求头**: `token: jwt_token_string`  
+**请求参数**:
+```json
+{
+  "id": 1  // 景区ID
+}
+```
+
+**响应数据**:
+```json
+{
+  "code": 1,
+  "msg": "success",
+  "data": {
+    "tag": 1  // 0-不喜欢，1-喜欢
+  }
+}
+```
+
+### 11. 切换景区喜欢标签状态
+**接口路径**: `/api/like/changetag`  
+**请求方式**: POST  
+**请求头**: `token: jwt_token_string`  
+**请求参数**:
+```json
+{
+  "id": 1  // 景区ID
+}
+```
+
+**响应数据**:
+```json
+{
+  "code": 1,
+  "msg": "success",
+  "data": {
+    "tag": 1  // 0-不喜欢，1-喜欢（切换后的状态）
+  }
+}
+```
+
+### 12. 搜索景区接口
 **接口路径**: `/api/scenic/search`  
 **请求方式**: POST  
 **请求参数**:
