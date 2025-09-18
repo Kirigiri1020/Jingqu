@@ -7,14 +7,13 @@
 				<view class="j-con">
 					<view class="tit" style="display: flex; align-items: center;">
 						<text style="margin-right: 7px; font-size: 17px; line-height: 1;">{{ details.dt.title }}</text>
-						<up-tag :text="details.dt.tag[1]" size="mini" shape="circle" style="margin-top: 1px;"></up-tag>
+						<up-tag :text="details.dt.tag[1]" size="mini" shape="circle" style="margin-top: 1px; display: flex; align-items: center; justify-content: center;"></up-tag>
 					</view>
 					<view class="like-icon" @click="handleLikeClick">
 						<up-icon 
-							name="heart" 
-							:color="likeStatus === 1 ? '#ff0000' : '#000000'" 
-							size="22"
-							:fill="likeStatus === 1"
+							:name="likeStatus === 1 ? 'heart-fill' : 'heart'" 
+							:color="likeStatus === 1 ? '#ff0000' : '#000000'"
+							size="24"
 						></up-icon>
 					</view>
 					<view class="jj">
@@ -154,17 +153,15 @@ const handleLikeClick = async () => {
 			margin-bottom: 30rpx;
 			
 			.like-icon {
-				margin: 15rpx 0;
-				padding: 10rpx;
+				margin: 5rpx 0;
+				padding: 8rpx;
 				display: inline-block;
 				border-radius: 50%;
-				background-color: #f5f5f5;
 				cursor: pointer;
 				transition: all 0.3s ease;
 				
 				&:active {
 					transform: scale(0.95);
-					background-color: #e0e0e0;
 				}
 			}
 
@@ -172,7 +169,7 @@ const handleLikeClick = async () => {
 				font-size: 36rpx;
 				font-weight: 700;
 				color: #111;
-				margin-bottom: 30rpx
+				margin-bottom: 10rpx
 			}
 
 			.jj {

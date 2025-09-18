@@ -24,8 +24,8 @@ const linkList = ref([])
 
 onLoad(() => {
 	likeList().then(res => {
-		console.log(res)
-		linkList.value = res
+		linkList.value = res.jingqu
+		console.log(linkList)
 	})
 })
 </script>
