@@ -46,6 +46,19 @@
 							</view>
 						</view>
 					</view>
+					
+					<!-- 推荐景区部分 -->
+					<view class="j-con ls" v-if="similarJingquList.length > 0">
+						<view class="tit" style="font-size: 34rpx">推荐景区</view>
+						<view class="scrollView">
+							<up-scroll-list :indicator="true" indicatorColor="#fff0f0" indicatorActiveColor="#f56c6c">
+								<view class="items" v-for="(item, index) in similarJingquList" :key="index">
+									<image class="img" :src="item.image" mode="aspectFill" />
+									<view class="title">{{ item.title }}</view>
+								</view>
+							</up-scroll-list>
+						</view>
+					</view>
 				</view>
 			</view>
 		</view>
@@ -55,10 +68,11 @@
 <script setup lang="ts">
 import { onLoad } from '@dcloudio/uni-app';
 import { ref, reactive } from 'vue';
-import { detailProject ,getliketag,changeliketag} from '../../api/api.js';
+import { detailProject ,getliketag,changeliketag, jingqusimilar} from '../../api/api.js';
 
 const projectList = ref([])
 const likeStatus = ref(0) // 0: 不喜欢, 1: 喜欢
+const similarJingquList = ref([]) // 相似景区列表
 
 const details = reactive({
 	dt: ''
@@ -96,6 +110,25 @@ onLoad((opt) => {
 	}).catch((error) => {
 		console.error("获取项目列表失败:", error)
 		projectList.value = []
+	})
+	
+	// 获取相似景区推荐
+	jingqusimilar(details.dt.id).then(res => {
+		console.log("相似景区响应:", res)
+		if (res && Array.isArray(res)) {
+			// 只提取需要的image和title字段
+			similarJingquList.value = res.map(item => ({
+				image: item.image,
+				title: item.title
+			}))
+			console.log("相似景区列表:", similarJingquList.value)
+		} else {
+			console.warn("相似景区响应格式不正确:", res)
+			similarJingquList.value = []
+		}
+	}).catch(error => {
+		console.error("获取相似景区失败:", error)
+		similarJingquList.value = []
 	})
 })
 
@@ -235,6 +268,30 @@ const handleLikeClick = async () => {
 							}
 						}
 					}
+				}
+			}
+			
+			// 推荐景区样式
+			.scrollView {
+				margin-top: 20rpx;
+				
+				.items {
+					margin-right: 30rpx;
+					text-align: center;
+					flex-shrink: 0;  
+				}
+				
+				.img {
+					width: 320rpx;
+					height: 200rpx;
+					border-radius: 14rpx;
+				}
+				
+				.title {
+					font-size: 28rpx;
+					font-weight: 600;
+					color: #333;
+					margin-top: 10rpx;
 				}
 			}
 		}

@@ -7,7 +7,7 @@
 					<view class="txt">签到</view>
 				</view>
 				<view class="set-right">
-					<uni-icons type="gear" size="30" color="#fff"></uni-icons>
+					<AdminDropdown />
 					<uni-icons type="chat" size="30" color="#fff"></uni-icons>
 				</view>
 			</view>
@@ -81,6 +81,7 @@ import { onLoad } from '@dcloudio/uni-app';
 import { login } from '../../api/api.js';
 import uniList from '@dcloudio/uni-ui/lib/uni-list/uni-list.vue';
 import uniListItem from '@dcloudio/uni-ui/lib/uni-list-item/uni-list-item.vue';
+import AdminDropdown from '../../components/AdminDropdown.vue';
 
 onLoad(async () => {
 	// 从本地存储加载用户信息

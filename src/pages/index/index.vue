@@ -26,6 +26,22 @@
       height='160'></up-swiper>
     <up-notice-bar text="项目数据仅为示例,非真实数据"></up-notice-bar>
     
+    <!-- 评分排序按钮 -->
+    <view class="sort-button-container">
+      <view 
+        :class="['sort-button', isSortedByRating ? 'sort-button-active' : '']"
+        @click="toggleRatingSort"
+      >
+        <text>按评分降序</text>
+        <up-icon 
+          v-if="isSortedByRating" 
+          name="arrow-down" 
+          size="16" 
+          color="#1890ff" 
+        />
+      </view>
+    </view>
+    
     <!-- 筛选结果提示 -->
     <view v-if="hasActiveFiltersComputed" class="filter-result-tip">
       <text>已应用筛选条件</text>
@@ -33,7 +49,66 @@
     </view>
 
     <view class="list">
-      <up-waterfall v-model="filteredFullList" ref="uWaterfallRef" :key="filterKey" v-if="showWaterfall">
+      <!-- 普通双列布局（用于排序后的显示） -->
+      <view v-if="isSortedByRating" class="two-column-layout">
+        <view class="column">
+          <view class="demo-water" v-for="(item, index) in leftColumnList" :key='index' @click="goDetailFromSortedList(item)">
+            <up-lazy-load threshold="-100" border-radius='10' :image="item.image" :index="index"></up-lazy-load>
+            <view class="demo-title">
+              {{ item.title }}
+            </view>
+            <view class="demo-info">
+              <text class="price">¥{{ item.price }}</text>
+              <text class="count">{{ item.count }}分</text>
+              <text class="place">{{ item.place }}</text>
+            </view>
+            <view class="demo-price">
+              {{ item.times }}
+            </view>
+            <view class="demo-tag" v-if="item.tags && item.tags.length">
+              <view class="demo-tag-owner" v-if="item.tags[0]">
+                {{ item.tags[0] }}
+              </view>
+              <view class="demo-tag-text" v-if="item.tags[1]">
+                {{ item.tags[1] }}
+              </view>
+            </view>
+            <view class="isDot" v-if='item.isDot'>
+              {{ item.isDot }}
+            </view>
+          </view>
+        </view>
+        <view class="column">
+          <view class="demo-water" v-for="(item, index) in rightColumnList" :key='index' @click="goDetailFromSortedList(item)">
+            <up-lazy-load threshold="-100" border-radius='10' :image="item.image" :index="index"></up-lazy-load>
+            <view class="demo-title">
+              {{ item.title }}
+            </view>
+            <view class="demo-info">
+              <text class="price">¥{{ item.price }}</text>
+              <text class="count">{{ item.count }}分</text>
+              <text class="place">{{ item.place }}</text>
+            </view>
+            <view class="demo-price">
+              {{ item.times }}
+            </view>
+            <view class="demo-tag" v-if="item.tags && item.tags.length">
+              <view class="demo-tag-owner" v-if="item.tags[0]">
+                {{ item.tags[0] }}
+              </view>
+              <view class="demo-tag-text" v-if="item.tags[1]">
+                {{ item.tags[1] }}
+              </view>
+            </view>
+            <view class="isDot" v-if='item.isDot'>
+              {{ item.isDot }}
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 瀑布流布局（用于普通显示） -->
+      <up-waterfall v-else v-model="filteredFullList" ref="uWaterfallRef" :key="filterKey">
         <template v-slot:left="{ leftList }">
           <view class="demo-water" v-for="(item, index) in leftList" :key='index' @click="goDetail(item)">
             <up-lazy-load threshold="-100" border-radius='10' :image="item.img" :index="index"></up-lazy-load>
@@ -48,11 +123,11 @@
             <view class="demo-price">
               {{ item.times }}
             </view>
-            <view class="demo-tag">
-              <view class="demo-tag-owner">
+            <view class="demo-tag" v-if="item.tag && item.tag.length">
+              <view class="demo-tag-owner" v-if="item.tag[0]">
                 {{ item.tag[0] }}
               </view>
-              <view class="demo-tag-text">
+              <view class="demo-tag-text" v-if="item.tag[1]">
                 {{ item.tag[1] }}
               </view>
             </view>
@@ -75,11 +150,11 @@
             <view class="demo-price">
               {{ item.times }}
             </view>
-            <view class="demo-tag">
-              <view class="demo-tag-owner">
+            <view class="demo-tag" v-if="item.tag && item.tag.length">
+              <view class="demo-tag-owner" v-if="item.tag[0]">
                 {{ item.tag[0] }}
               </view>
-              <view class="demo-tag-text">
+              <view class="demo-tag-text" v-if="item.tag[1]">
                 {{ item.tag[1] }}
               </view>
             </view>
@@ -106,7 +181,7 @@
 </template>
 
 <script setup>
-import { getBanner, getHomeList } from '../../api/api.js'
+import { getBanner, getHomeList, getcountList } from '../../api/api.js'
 import { onLoad, onReachBottom, onPageScroll } from '@dcloudio/uni-app';
 import { ref, computed, watch, nextTick } from 'vue';
 import SearchFilter from '../../components/SearchFilter.vue';
@@ -121,13 +196,11 @@ const showTopBtn = ref(0)
 const uWaterfallRef = ref(null)
 const filterKey = ref(0)
 const showWaterfall = ref(true)
+const isSortedByRating = ref(false) // 是否按评分排序
+const sortedList = ref([]) // 排序后的列表
 
 // 计算筛选后的完整列表
 const filteredFullList = computed(() => {
-  if (!hasActiveFilters(currentFilters.value) && !keyword.value) {
-    return originalList.value
-  }
-  
   let filtered = [...originalList.value]
   
   // 先应用筛选条件
@@ -143,6 +216,13 @@ const filteredFullList = computed(() => {
     )
   }
   
+  // 如果启用了评分排序，返回排序后的列表
+  if (isSortedByRating.value) {
+    return sortedList.value.filter(item => 
+      filtered.some(originalItem => originalItem.id === item.id)
+    )
+  }
+  
   return filtered
 })
 
@@ -150,6 +230,25 @@ const filteredFullList = computed(() => {
 // 检查是否有激活的筛选条件
 const hasActiveFiltersComputed = computed(() => {
   return hasActiveFilters(currentFilters.value)
+})
+
+// 计算左右两列数据（用于排序后的双列布局，按行排列）
+const leftColumnList = computed(() => {
+  if (!isSortedByRating.value) return []
+  const result = []
+  for (let i = 0; i < filteredFullList.value.length; i += 2) {
+    result.push(filteredFullList.value[i])
+  }
+  return result
+})
+
+const rightColumnList = computed(() => {
+  if (!isSortedByRating.value) return []
+  const result = []
+  for (let i = 1; i < filteredFullList.value.length; i += 2) {
+    result.push(filteredFullList.value[i])
+  }
+  return result
 })
 
 onLoad(() => {
@@ -195,6 +294,27 @@ const goDetail = (item) => {
   uni.navigateTo({ url: `/pages/detail/detail?item=${encodeURIComponent(can)}` })
 }
 
+const goDetailFromSortedList = (item) => {
+  // 转换数据结构以匹配详情页的期望格式
+  const transformedItem = {
+    img: item.image, // 将image转换为img
+    title: item.title,
+    tag: item.tags || [], // 将tags转换为tag
+    introduce: item.introduction || '', // 将introduction转换为introduce
+    times: item.openTime || '', // 将openTime转换为times
+    id: item.id,
+    price: item.price,
+    count: item.count,
+    place: item.place,
+    address: item.address,
+    isRecommended: item.isRecommended,
+    status: item.status,
+    createTime: item.createTime
+  }
+  const can = JSON.stringify(transformedItem)
+  uni.navigateTo({ url: `/pages/detail/detail?item=${encodeURIComponent(can)}` })
+}
+
 // 点击搜索框显示筛选面板
 const handleSearchClick = () => {
   showFilter.value = true
@@ -230,13 +350,42 @@ const handleSearchChange = (value) => {
 watch(filteredFullList, (newValue) => {
   console.log('筛选后列表长度:', newValue.length)
   console.log('筛选后列表内容:', newValue)
-  
-  // 强制重新渲染瀑布流组件（小程序兼容方案）
-  showWaterfall.value = false
-  nextTick(() => {
-    showWaterfall.value = true
-  })
 }, { immediate: true })
+
+// 切换评分排序
+const toggleRatingSort = async () => {
+  if (isSortedByRating.value) {
+    // 如果已经是排序状态，则关闭排序
+    isSortedByRating.value = false
+  } else {
+    // 如果是未排序状态，则获取排序数据
+    try {
+      // 显示加载状态
+      uni.showLoading({
+        title: '加载中...'
+      })
+      
+      const res = await getcountList()
+      console.log("获取排序后的数据:", res)
+      // 确保获取的是数组数据，正确处理API返回的数据结构
+      sortedList.value = Array.isArray(res) ? res : (res.data || res.list || [])
+      console.log("处理后的排序数据:", sortedList.value)
+      isSortedByRating.value = true
+      
+      uni.hideLoading()
+    } catch (error) {
+      console.error('获取排序列表失败:', error)
+      uni.hideLoading()
+      uni.showToast({
+        title: '获取排序数据失败',
+        icon: 'error'
+      })
+    }
+  }
+  
+  // 强制重新渲染列表
+  filterKey.value++ // 通过改变key来强制重新渲染
+}
 
 
 </script>
@@ -256,6 +405,29 @@ page {
 .search-container {
   position: relative;
   margin-bottom: 20rpx;
+}
+
+.sort-button-container {
+  margin-bottom: 20rpx;
+}
+
+.sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 12rpx 24rpx;
+  border: 2rpx solid #d9d9d9;
+  border-radius: 8rpx;
+  background-color: #fff;
+  font-size: 26rpx;
+  color: #666;
+  transition: all 0.3s ease;
+}
+
+.sort-button-active {
+  border-color: #1890ff;
+  color: #1890ff;
+  background-color: #e6f7ff;
 }
 
 .filter-result-tip {
@@ -279,6 +451,23 @@ page {
 .no-result-text {
   font-size: 28rpx;
   color: #999;
+}
+
+/* 双列布局样式 */
+.two-column-layout {
+  display: flex;
+  gap: 20rpx;
+}
+
+.two-column-layout .column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.two-column-layout .demo-water {
+  margin: 0;
 }
 
   .list {

@@ -52,6 +52,33 @@
 				"navigationStyle":"default",
 				"navigationBarBackgroundColor": "#ffffff"
 			}
+		},
+		{
+			"path" : "pages/admin/user",
+			"style" : 
+			{
+				"navigationBarTitleText" : "用户管理",
+				"navigationStyle":"default",
+				"navigationBarBackgroundColor": "#ffffff"
+			}
+		},
+		{
+			"path" : "pages/admin/jingqu",
+			"style" : 
+			{
+				"navigationBarTitleText" : "景区管理",
+				"navigationStyle":"default",
+				"navigationBarBackgroundColor": "#ffffff"
+			}
+		},
+		{
+			"path" : "pages/admin/project",
+			"style" : 
+			{
+				"navigationBarTitleText" : "项目管理",
+				"navigationStyle":"default",
+				"navigationBarBackgroundColor": "#ffffff"
+			}
 		}
 	],
 	"tabBar": {
