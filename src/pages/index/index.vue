@@ -111,24 +111,24 @@
       <up-waterfall v-else v-model="filteredFullList" ref="uWaterfallRef" :key="filterKey">
         <template v-slot:left="{ leftList }">
           <view class="demo-water" v-for="(item, index) in leftList" :key='index' @click="goDetail(item)">
-            <up-lazy-load threshold="-100" border-radius='10' :image="item.img" :index="index"></up-lazy-load>
+            <up-lazy-load threshold="-100" border-radius='10' :image="item.image || item.img" :index="index"></up-lazy-load>
             <view class="demo-title">
               {{ item.title }}
             </view>
             <view class="demo-info">
               <text class="price">¥{{ item.price }}</text>
               <text class="count">{{ item.count }}分</text>
-              <text class="place">{{ item.place }}</text>
+              <text class="place">{{ item.place || item.address }}</text>
             </view>
             <view class="demo-price">
               {{ item.times }}
             </view>
-            <view class="demo-tag" v-if="item.tag && item.tag.length">
-              <view class="demo-tag-owner" v-if="item.tag[0]">
-                {{ item.tag[0] }}
+            <view class="demo-tag" v-if="(item.tags && item.tags.length) || (item.tag && item.tag.length)">
+              <view class="demo-tag-owner" v-if="(item.tags && item.tags[0]) || (item.tag && item.tag[0])">
+                {{ (item.tags && item.tags[0]) || (item.tag && item.tag[0]) }}
               </view>
-              <view class="demo-tag-text" v-if="item.tag[1]">
-                {{ item.tag[1] }}
+              <view class="demo-tag-text" v-if="(item.tags && item.tags[1]) || (item.tag && item.tag[1])">
+                {{ (item.tags && item.tags[1]) || (item.tag && item.tag[1]) }}
               </view>
             </view>
             <view class="isDot" v-if='item.isDot'>
@@ -138,24 +138,24 @@
         </template>
         <template v-slot:right="{ rightList }">
           <view class="demo-water" v-for="(item, index) in rightList" :key='index' @click="goDetail(item)">
-            <up-lazy-load threshold="-500" border-radius='10' :image="item.img" :index="index"></up-lazy-load>
+            <up-lazy-load threshold="-500" border-radius='10' :image="item.image || item.img" :index="index"></up-lazy-load>
             <view class="demo-title">
               {{ item.title }}
             </view>
             <view class="demo-info">
               <text class="price">¥{{ item.price }}</text>
               <text class="count">{{ item.count }}分</text>
-              <text class="place">{{ item.place }}</text>
+              <text class="place">{{ item.place || item.address }}</text>
             </view>
             <view class="demo-price">
               {{ item.times }}
             </view>
-            <view class="demo-tag" v-if="item.tag && item.tag.length">
-              <view class="demo-tag-owner" v-if="item.tag[0]">
-                {{ item.tag[0] }}
+            <view class="demo-tag" v-if="(item.tags && item.tags.length) || (item.tag && item.tag.length)">
+              <view class="demo-tag-owner" v-if="(item.tags && item.tags[0]) || (item.tag && item.tag[0])">
+                {{ (item.tags && item.tags[0]) || (item.tag && item.tag[0]) }}
               </view>
-              <view class="demo-tag-text" v-if="item.tag[1]">
-                {{ item.tag[1] }}
+              <view class="demo-tag-text" v-if="(item.tags && item.tags[1]) || (item.tag && item.tag[1])">
+                {{ (item.tags && item.tags[1]) || (item.tag && item.tag[1]) }}
               </view>
             </view>
             <view class="isDot" v-if='item.isDot'>
@@ -181,11 +181,11 @@
 </template>
 
 <script setup>
-import { getBanner, getHomeList, getcountList } from '../../api/api.js'
+import { getBanner, getHomeList, getcountList, filter } from '../../api/api.js'
 import { onLoad, onReachBottom, onPageScroll } from '@dcloudio/uni-app';
 import { ref, computed, watch, nextTick } from 'vue';
 import SearchFilter from '../../components/SearchFilter.vue';
-import { filterScenicSpots, hasActiveFilters, resetFilters } from '../../utils/filterUtils.js';
+import { hasActiveFilters, resetFilters } from '../../utils/filterUtils.js';
 
 const showFilter = ref(false)
 const keyword = ref('')
@@ -203,12 +203,7 @@ const sortedList = ref([]) // 排序后的列表
 const filteredFullList = computed(() => {
   let filtered = [...originalList.value]
   
-  // 先应用筛选条件
-  if (hasActiveFilters(currentFilters.value)) {
-    filtered = filterScenicSpots(filtered, currentFilters.value)
-  }
-  
-  // 再应用关键词搜索
+  // 应用关键词搜索（前端搜索）
   if (keyword.value.trim()) {
     const searchTerm = keyword.value.trim()
     filtered = filtered.filter(item => 
@@ -326,18 +321,124 @@ const handleSearchClear = () => {
 }
 
 // 处理筛选条件变化
-const handleFilterChange = (filters) => {
-  // 先重置筛选条件，避免多重筛选
-  currentFilters.value = resetFilters()
-  // 再应用新的筛选条件
-  currentFilters.value = { ...filters }
-  // 不再自动关闭面板，让用户点击确定后再关闭
+const handleFilterChange = async (filters) => {
+  // 检查是否有筛选条件
+  const hasFilters = Object.values(filters).some(value => 
+    value !== '' && value !== null && value !== undefined
+  )
+  
+  if (!hasFilters) {
+    // 如果没有筛选条件，直接使用原始数据
+    currentFilters.value = resetFilters()
+    showFilter.value = false
+    return
+  }
+  
+  try {
+    // 显示加载状态
+    uni.showLoading({
+      title: '筛选中...'
+    })
+    
+    // 构建API请求参数，只包含有值的筛选条件
+    const filterParams = {}
+    if (filters.title && filters.title.trim()) {
+      filterParams.title = filters.title.trim()
+    }
+    if (filters.minPrice) {
+      filterParams.minPrice = Number(filters.minPrice)
+    }
+    if (filters.maxPrice) {
+      filterParams.maxPrice = Number(filters.maxPrice)
+    }
+    if (filters.minCount) {
+      filterParams.minCount = Number(filters.minCount)
+    }
+    if (filters.maxCount) {
+      filterParams.maxCount = Number(filters.maxCount)
+    }
+    if (filters.address && filters.address.trim()) {
+      filterParams.address = filters.address.trim()
+    }
+    
+    // 调用后端筛选API
+    const res = await filter(filterParams)
+    console.log('筛选API返回结果:', res)
+    console.log('筛选参数:', filterParams)
+    
+    // 更新筛选后的数据
+    if (Array.isArray(res)) {
+      originalList.value = res
+      console.log('使用数组数据，长度:', res.length)
+    } else if (res.data) {
+      originalList.value = res.data
+      console.log('使用data字段数据，长度:', res.data.length)
+    } else if (res.list) {
+      originalList.value = res.list
+      console.log('使用list字段数据，长度:', res.list.length)
+    } else {
+      originalList.value = []
+      console.log('无有效数据，设置为空数组')
+    }
+    
+    console.log('更新后的originalList:', originalList.value)
+    
+    // 保存当前筛选条件
+    currentFilters.value = { ...filters }
+    
+    // 强制重新渲染瀑布流组件
+    filterKey.value++
+    
+    // 关闭筛选面板
+    showFilter.value = false
+    
+    // 延迟一小段时间确保DOM更新完成
+    setTimeout(() => {
+      uni.hideLoading()
+      // 强制页面重新渲染
+      filterKey.value++
+    }, 100)
+  } catch (error) {
+    console.error('筛选失败:', error)
+    uni.hideLoading()
+    uni.showToast({
+      title: '筛选失败',
+      icon: 'error'
+    })
+  }
 }
 
-// 清空所有筛选条件
-const clearAllFilters = () => {
+// 清空所有筛选条件（保持原有逻辑）
+const clearAllFilters = async () => {
+  try {
+    uni.showLoading({
+      title: '重置中...'
+    })
+    
+    // 重新获取原始数据
+    const res = await getHomeList()
+    originalList.value = Array.isArray(res) ? res : (res.data || res.list || [])
+    
+    currentFilters.value = resetFilters()
+    keyword.value = ''
+    
+    uni.hideLoading()
+  } catch (error) {
+    console.error('重置失败:', error)
+    uni.hideLoading()
+    uni.showToast({
+      title: '重置失败',
+      icon: 'error'
+    })
+  }
+}
+
+// 仅重置筛选条件但不重新获取数据（用于筛选后的重置）
+const resetFiltersOnly = () => {
   currentFilters.value = resetFilters()
   keyword.value = ''
+  // 强制重新渲染瀑布流组件
+  filterKey.value++
 }
 
 // 处理搜索输入变化
@@ -348,8 +449,14 @@ const handleSearchChange = (value) => {
 
   // 监听筛选结果变化
 watch(filteredFullList, (newValue) => {
-  console.log('筛选后列表长度:', newValue.length)
-  console.log('筛选后列表内容:', newValue)
+  console.log('filteredFullList长度:', newValue.length)
+  console.log('filteredFullList内容:', newValue)
+}, { immediate: true })
+
+// 监听originalList变化
+watch(originalList, (newValue) => {
+  console.log('originalList长度:', newValue.length)
+  console.log('originalList内容:', newValue)
 }, { immediate: true })
 
 // 切换评分排序

@@ -91,3 +91,7 @@ export const jingqusimilar = (id) => {
 export const getcountList = () => {
     return http('/user/getcountList')
 }
+
+export const filter = (data) => {
+  return http('/user/filter', data, "POST")
+}

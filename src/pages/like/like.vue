@@ -16,16 +16,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
-import { onLoad } from '@dcloudio/uni-app';
+import { ref } from 'vue';
+import { onShow } from '@dcloudio/uni-app';
 import { likeList } from '../../api/api.js';
 
 const linkList = ref([])
 
-onLoad(() => {
+// 每次页面显示时都重新加载数据
+onShow(() => {
 	likeList().then(res => {
 		linkList.value = res.jingqu
-		console.log(linkList)
+		console.log("重新加载喜欢列表:", linkList.value)
+	}).catch(error => {
+		console.error("加载喜欢列表失败:", error)
 	})
 })
 </script>

@@ -57,7 +57,7 @@
       <view class="filter-item">
         <text class="filter-label">地理位置：</text>
         <up-input
-          v-model="filters.place"
+          v-model="filters.address"
           placeholder="（省份，直辖市，自治区）"
           clearable
         ></up-input>
@@ -90,7 +90,7 @@ const filters = ref({
   maxPrice: '',
   minCount: '',
   maxCount: '',
-  place: ''
+  address: ''
 })
 
 // 应用筛选条件
@@ -108,7 +108,7 @@ const resetFilters = () => {
     maxPrice: '',
     minCount: '',
     maxCount: '',
-    place: ''
+    address: ''
   }
 }
 

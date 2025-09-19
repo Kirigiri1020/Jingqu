@@ -1,6 +1,5 @@
 <template>
 	<view class="detail">
-		<up-navbar bg-color="#00000000" title="" :autoBack="true" left-icon-color="#fff"></up-navbar>
 		<view class="d-con">
 			<image :src="details.dt.img" mode="aspectFill" />
 			<view class="d-content">
