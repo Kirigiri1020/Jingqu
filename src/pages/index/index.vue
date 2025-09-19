@@ -347,7 +347,23 @@ const Totop = () => {
 
 
 const goDetail = (item) => {
-  const can = JSON.stringify(item)
+  // 转换数据结构以匹配详情页的期望格式
+  const transformedItem = {
+    img: item.image || item.img, // 将image转换为img
+    title: item.title,
+    tag: item.tags || item.tag || [], // 将tags转换为tag
+    introduce: item.introduction || item.introduce || '', // 将introduction转换为introduce
+    times: item.openTime || item.times || '', // 将openTime转换为times
+    id: item.id,
+    price: item.price,
+    count: item.count,
+    place: item.place || item.address,
+    address: item.address || item.place,
+    isRecommended: item.isRecommended,
+    status: item.status,
+    createTime: item.createTime
+  }
+  const can = JSON.stringify(transformedItem)
   uni.navigateTo({ url: `/pages/detail/detail?item=${encodeURIComponent(can)}` })
 }
 
