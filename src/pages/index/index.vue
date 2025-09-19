@@ -107,63 +107,125 @@
         </view>
       </view>
 
-      <!-- 瀑布流布局（用于普通显示） -->
-      <up-waterfall v-else v-model="filteredFullList" ref="uWaterfallRef" :key="filterKey">
-        <template v-slot:left="{ leftList }">
-          <view class="demo-water" v-for="(item, index) in leftList" :key='index' @click="goDetail(item)">
-            <up-lazy-load threshold="-100" border-radius='10' :image="item.image || item.img" :index="index"></up-lazy-load>
-            <view class="demo-title">
-              {{ item.title }}
-            </view>
-            <view class="demo-info">
-              <text class="price">¥{{ item.price }}</text>
-              <text class="count">{{ item.count }}分</text>
-              <text class="place">{{ item.place || item.address }}</text>
-            </view>
-            <view class="demo-price">
-              {{ item.times }}
-            </view>
-            <view class="demo-tag" v-if="(item.tags && item.tags.length) || (item.tag && item.tag.length)">
-              <view class="demo-tag-owner" v-if="(item.tags && item.tags[0]) || (item.tag && item.tag[0])">
-                {{ (item.tags && item.tags[0]) || (item.tag && item.tag[0]) }}
+      <!-- 未筛选状态下的瀑布流 -->
+      <template v-else-if="!hasActiveFiltersComputed">
+        <up-waterfall v-model="filteredFullList" ref="uWaterfallRef" :key="filterKey">
+          <template v-slot:left="{ leftList }">
+            <view class="demo-water" v-for="(item, index) in leftList" :key='index' @click="goDetail(item)">
+              <up-lazy-load threshold="-100" border-radius='10' :image="item.image || item.img" :index="index"></up-lazy-load>
+              <view class="demo-title">
+                {{ item.title }}
               </view>
-              <view class="demo-tag-text" v-if="(item.tags && item.tags[1]) || (item.tag && item.tag[1])">
-                {{ (item.tags && item.tags[1]) || (item.tag && item.tag[1]) }}
+              <view class="demo-info">
+                <text class="price">¥{{ item.price }}</text>
+                <text class="count">{{ item.count }}分</text>
+                <text class="place">{{ item.place || item.address }}</text>
               </view>
-            </view>
-            <view class="isDot" v-if='item.isDot'>
-              {{ item.isDot }}
-            </view>
-          </view>
-        </template>
-        <template v-slot:right="{ rightList }">
-          <view class="demo-water" v-for="(item, index) in rightList" :key='index' @click="goDetail(item)">
-            <up-lazy-load threshold="-500" border-radius='10' :image="item.image || item.img" :index="index"></up-lazy-load>
-            <view class="demo-title">
-              {{ item.title }}
-            </view>
-            <view class="demo-info">
-              <text class="price">¥{{ item.price }}</text>
-              <text class="count">{{ item.count }}分</text>
-              <text class="place">{{ item.place || item.address }}</text>
-            </view>
-            <view class="demo-price">
-              {{ item.times }}
-            </view>
-            <view class="demo-tag" v-if="(item.tags && item.tags.length) || (item.tag && item.tag.length)">
-              <view class="demo-tag-owner" v-if="(item.tags && item.tags[0]) || (item.tag && item.tag[0])">
-                {{ (item.tags && item.tags[0]) || (item.tag && item.tag[0]) }}
+              <view class="demo-price">
+                {{ item.times }}
               </view>
-              <view class="demo-tag-text" v-if="(item.tags && item.tags[1]) || (item.tag && item.tag[1])">
-                {{ (item.tags && item.tags[1]) || (item.tag && item.tag[1]) }}
+              <view class="demo-tag" v-if="(item.tags && item.tags.length) || (item.tag && item.tag.length)">
+                <view class="demo-tag-owner" v-if="(item.tags && item.tags[0]) || (item.tag && item.tag[0])">
+                  {{ (item.tags && item.tags[0]) || (item.tag && item.tag[0]) }}
+                </view>
+                <view class="demo-tag-text" v-if="(item.tags && item.tags[1]) || (item.tag && item.tag[1])">
+                  {{ (item.tags && item.tags[1]) || (item.tag && item.tag[1]) }}
+                </view>
+              </view>
+              <view class="isDot" v-if='item.isDot'>
+                {{ item.isDot }}
               </view>
             </view>
-            <view class="isDot" v-if='item.isDot'>
-              {{ item.isDot }}
+          </template>
+          <template v-slot:right="{ rightList }">
+            <view class="demo-water" v-for="(item, index) in rightList" :key='index' @click="goDetail(item)">
+              <up-lazy-load threshold="-500" border-radius='10' :image="item.image || item.img" :index="index"></up-lazy-load>
+              <view class="demo-title">
+                {{ item.title }}
+              </view>
+              <view class="demo-info">
+                <text class="price">¥{{ item.price }}</text>
+                <text class="count">{{ item.count }}分</text>
+                <text class="place">{{ item.place || item.address }}</text>
+              </view>
+              <view class="demo-price">
+                {{ item.times }}
+              </view>
+              <view class="demo-tag" v-if="(item.tags && item.tags.length) || (item.tag && item.tag.length)">
+                <view class="demo-tag-owner" v-if="(item.tags && item.tags[0]) || (item.tag && item.tag[0])">
+                  {{ (item.tags && item.tags[0]) || (item.tag && item.tag[0]) }}
+                </view>
+                <view class="demo-tag-text" v-if="(item.tags && item.tags[1]) || (item.tag && item.tag[1])">
+                  {{ (item.tags && item.tags[1]) || (item.tag && item.tag[1]) }}
+                </view>
+              </view>
+              <view class="isDot" v-if='item.isDot'>
+                {{ item.isDot }}
+              </view>
             </view>
-          </view>
-        </template>
-      </up-waterfall>
+          </template>
+        </up-waterfall>
+      </template>
+
+      <!-- 筛选状态下的瀑布流 -->
+      <template v-else>
+        <up-waterfall v-model="filteredFullList" ref="uWaterfallRefFiltered" :key="filterKey + 'filtered'">
+          <template v-slot:left="{ leftList }">
+            <view class="demo-water" v-for="(item, index) in leftList" :key='index' @click="goDetail(item)">
+              <up-lazy-load threshold="-100" border-radius='10' :image="item.image || item.img" :index="index"></up-lazy-load>
+              <view class="demo-title">
+                {{ item.title }}
+              </view>
+              <view class="demo-info">
+                <text class="price">¥{{ item.price }}</text>
+                <text class="count">{{ item.count }}分</text>
+                <text class="place">{{ item.place || item.address }}</text>
+              </view>
+              <view class="demo-price">
+                {{ item.times }}
+              </view>
+              <view class="demo-tag" v-if="(item.tags && item.tags.length) || (item.tag && item.tag.length)">
+                <view class="demo-tag-owner" v-if="(item.tags && item.tags[0]) || (item.tag && item.tag[0])">
+                  {{ (item.tags && item.tags[0]) || (item.tag && item.tag[0]) }}
+                </view>
+                <view class="demo-tag-text" v-if="(item.tags && item.tags[1]) || (item.tag && item.tag[1])">
+                  {{ (item.tags && item.tags[1]) || (item.tag && item.tag[1]) }}
+                </view>
+              </view>
+              <view class="isDot" v-if='item.isDot'>
+                {{ item.isDot }}
+              </view>
+            </view>
+          </template>
+          <template v-slot:right="{ rightList }">
+            <view class="demo-water" v-for="(item, index) in rightList" :key='index' @click="goDetail(item)">
+              <up-lazy-load threshold="-500" border-radius='10' :image="item.image || item.img" :index="index"></up-lazy-load>
+              <view class="demo-title">
+                {{ item.title }}
+              </view>
+              <view class="demo-info">
+                <text class="price">¥{{ item.price }}</text>
+                <text class="count">{{ item.count }}分</text>
+                <text class="place">{{ item.place || item.address }}</text>
+              </view>
+              <view class="demo-price">
+                {{ item.times }}
+              </view>
+              <view class="demo-tag" v-if="(item.tags && item.tags.length) || (item.tag && item.tag.length)">
+                <view class="demo-tag-owner" v-if="(item.tags && item.tags[0]) || (item.tag && item.tag[0])">
+                  {{ (item.tags && item.tags[0]) || (item.tag && item.tag[0]) }}
+                </view>
+                <view class="demo-tag-text" v-if="(item.tags && item.tags[1]) || (item.tag && item.tag[1])">
+                  {{ (item.tags && item.tags[1]) || (item.tag && item.tag[1]) }}
+                </view>
+              </view>
+              <view class="isDot" v-if='item.isDot'>
+                {{ item.isDot }}
+              </view>
+            </view>
+          </template>
+        </up-waterfall>
+      </template>
     </view>
     
     <!-- 无结果提示 -->
@@ -203,8 +265,8 @@ const sortedList = ref([]) // 排序后的列表
 const filteredFullList = computed(() => {
   let filtered = [...originalList.value]
   
-  // 应用关键词搜索（前端搜索）
-  if (keyword.value.trim()) {
+  // 只有在没有激活筛选条件时才应用前端关键词搜索
+  if (keyword.value.trim() && !hasActiveFiltersComputed.value) {
     const searchTerm = keyword.value.trim()
     filtered = filtered.filter(item => 
       item.title && item.title.includes(searchTerm)
@@ -364,40 +426,33 @@ const handleFilterChange = async (filters) => {
     // 调用后端筛选API
     const res = await filter(filterParams)
     console.log('筛选API返回结果:', res)
-    console.log('筛选参数:', filterParams)
     
     // 更新筛选后的数据
     if (Array.isArray(res)) {
       originalList.value = res
-      console.log('使用数组数据，长度:', res.length)
     } else if (res.data) {
       originalList.value = res.data
-      console.log('使用data字段数据，长度:', res.data.length)
     } else if (res.list) {
       originalList.value = res.list
-      console.log('使用list字段数据，长度:', res.list.length)
     } else {
       originalList.value = []
-      console.log('无有效数据，设置为空数组')
     }
     
-    console.log('更新后的originalList:', originalList.value)
+    console.log('筛选后数据长度:', originalList.value.length)
     
     // 保存当前筛选条件
     currentFilters.value = { ...filters }
     
-    // 强制重新渲染瀑布流组件
-    filterKey.value++
-    
     // 关闭筛选面板
     showFilter.value = false
     
-    // 延迟一小段时间确保DOM更新完成
-    setTimeout(() => {
+    // 使用nextTick确保DOM更新完成
+    nextTick(() => {
       uni.hideLoading()
-      // 强制页面重新渲染
-      filterKey.value++
-    }, 100)
+      
+      // 强制重新渲染瀑布流组件
+      filterKey.value = Date.now()
+    })
   } catch (error) {
     console.error('筛选失败:', error)
     uni.hideLoading()
